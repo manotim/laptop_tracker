@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: laptop-tracker
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn laptop_tracker.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: laptop-tracker-db
+          property: connectionString
+
+databases:
+  - name: laptop-tracker-db
+    plan: free
+    databaseName: laptop_tracker
+    user: laptop_tracker

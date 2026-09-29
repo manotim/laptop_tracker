@@ -1,0 +1,141 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Staff dashboard{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">Staff Dashboard</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="mb-0">{{ laptop_rows|length }}</h3>
+                <p class="text-muted small mb-0">Total laptops</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="mb-0">{{ active|length }}</h3>
+                <p class="text-muted small mb-0">Out (on time)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center {% if overdue %}border border-danger border-2{% endif %}">
+            <div class="card-body">
+                <h3 class="mb-0 {% if overdue %}text-danger{% endif %}">
+                    {{ overdue|length }}
+                </h3>
+                <p class="text-muted small mb-0">Overdue</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if overdue %}
+    <div class="card mb-4 border border-danger border-2">
+        <div class="card-body">
+            <h6 class="text-danger mb-3">⚠ Overdue checkouts</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="text-muted small">
+                    <tr>
+                        <th>Laptop</th>
+                        <th>Owner</th>
+                        <th>Admission #</th>
+                        <th>Was due</th>
+                        <th>Minutes late</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for c in overdue %}
+                        <tr>
+                            <td>{{ c.laptop.name }} ({{ c.laptop.model_number }})</td>
+                            <td>{{ c.student.full_name|default:"—" }}</td>
+                            <td>{{ c.student.admission_number }}</td>
+                            <td>{{ c.expected_return_at|date:"M d, H:i" }}</td>
+                            <td class="text-danger"><strong>{{ c.minutes_overdue }}</strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="mb-3">Currently out (on time)</h6>
+        {% if active %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="text-muted small">
+                    <tr>
+                        <th>Laptop</th>
+                        <th>Owner</th>
+                        <th>Admission #</th>
+                        <th>Checked out</th>
+                        <th>Due</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for c in active %}
+                        <tr>
+                            <td>{{ c.laptop.name }} ({{ c.laptop.model_number }})</td>
+                            <td>{{ c.student.full_name|default:"—" }}</td>
+                            <td>{{ c.student.admission_number }}</td>
+                            <td>{{ c.checked_out_at|date:"M d, H:i" }}</td>
+                            <td>{{ c.expected_return_at|date:"M d, H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted small mb-0">No laptops currently out.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h6 class="mb-3">All laptops on the shelf</h6>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="text-muted small">
+                <tr>
+                    <th>Slot</th>
+                    <th>Laptop</th>
+                    <th>Model #</th>
+                    <th>Owner</th>
+                    <th>Admission #</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in laptop_rows %}
+                    <tr {% if row.is_overdue %}class="table-danger"{% endif %}>
+                        <td><strong>{{ row.laptop.slot_label }}</strong></td>
+                        <td>{{ row.laptop.name }}</td>
+                        <td>{{ row.laptop.model_number }}</td>
+                        <td>{{ row.laptop.owner.full_name|default:"—" }}</td>
+                        <td>{{ row.laptop.owner.admission_number }}</td>
+                        <td>
+                            {% if row.is_available %}
+                                <span class="badge bg-success">In storage</span>
+                            {% elif row.is_overdue %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Out</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

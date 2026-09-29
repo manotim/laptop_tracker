@@ -1,0 +1,36 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Check out {{ laptop.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-body p-4">
+                <h4 class="mb-1">Check out {{ laptop.name }}</h4>
+                <p class="text-muted small mb-4">
+                    Model {{ laptop.model_number }} · Slot {{ laptop.slot_label }}
+                </p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        Confirm checkout
+                    </button>
+                    <a href="{% url 'dashboard' %}"
+                       class="btn btn-link w-100 mt-2">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

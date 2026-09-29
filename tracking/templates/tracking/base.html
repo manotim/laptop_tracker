@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Laptop Tracker{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <style>
+        body { background: #f4f6fa; }
+        .card { border: none; box-shadow: 0 1px 6px rgba(0,0,0,.06); border-radius: 12px; }
+        .navbar-brand { font-weight: 700; letter-spacing: -.5px; }
+        .badge { font-weight: 500; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">💻 Laptop Tracker</a>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            {% if user.is_authenticated %}
+                <span class="text-white-50 small d-none d-md-inline">
+                    {{ user.full_name|default:user.admission_number }}
+                </span>
+                {% if user.is_staff %}
+                    <a href="{% url 'staff_dashboard' %}" class="btn btn-sm btn-light">
+                        Staff view
+                    </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light">
+                    Log out
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
