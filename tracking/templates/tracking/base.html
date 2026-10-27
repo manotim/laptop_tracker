@@ -24,9 +24,11 @@
                     {{ user.full_name|default:user.admission_number }}
                 </span>
                 {% if user.is_staff %}
-                    <a href="{% url 'staff_dashboard' %}" class="btn btn-sm btn-light">
-                        Staff view
-                    </a>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'staff_dashboard' %}" class="btn btn-light">Dashboard</a>
+                        <a href="{% url 'staff_laptops' %}" class="btn btn-light">Laptops</a>
+                        <a href="{% url 'staff_students' %}" class="btn btn-light">Students</a>
+                    </div>
                 {% endif %}
                 <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light">
                     Log out

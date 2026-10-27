@@ -1,0 +1,122 @@
+{% extends 'tracking/base.html' %}
+{% block title %}{{ laptop.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h4 class="mb-0">{{ laptop.name }}</h4>
+        <small class="text-muted">Slot {{ laptop.slot_label }}</small>
+    </div>
+    <a href="{% url 'staff_laptop_edit' laptop.id %}" class="btn btn-outline-secondary btn-sm">
+        Edit
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="mb-3">Details</h6>
+                <dl class="row mb-0">
+                    <dt class="col-4">Owner</dt>
+                    <dd class="col-8">
+                        {{ laptop.owner.full_name|default:"—" }}
+                        ({{ laptop.owner.admission_number }})
+                    </dd>
+                    <dt class="col-4">Model #</dt>
+                    <dd class="col-8">{{ laptop.model_number }}</dd>
+                    <dt class="col-4">Serial #</dt>
+                    <dd class="col-8">{{ laptop.serial_number|default:"—" }}</dd>
+                    <dt class="col-4">Slot</dt>
+                    <dd class="col-8">{{ laptop.slot_label }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card h-100 {% if active and active.is_overdue %}border-danger border-2{% endif %}">
+            <div class="card-body">
+                {% if not active %}
+                    <h6 class="mb-3">In storage</h6>
+                    <p class="text-muted small mb-3">Ready to check out.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <label class="form-label small">Duration</label>
+                        <select name="duration_hours" class="form-select mb-3">
+                            {% for h, label in duration_choices %}
+                                <option value="{{ h }}" {% if h == 3 %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-primary w-100">
+                            Check out to {{ laptop.owner.admission_number }}
+                        </button>
+                    </form>
+                {% else %}
+                    <h6 class="mb-3 {% if active.is_overdue %}text-danger{% endif %}">
+                        {% if active.is_overdue %}⚠ Overdue{% else %}Checked out{% endif %}
+                    </h6>
+                    <p class="small mb-1">
+                        Out since
+                        <strong>{{ active.checked_out_at|date:"M d, H:i" }}</strong>
+                    </p>
+                    <p class="small mb-3">
+                        Due <strong>{{ active.expected_return_at|date:"M d, H:i" }}</strong>
+                        {% if active.is_overdue %}
+                            <span class="text-danger">
+                                ({{ active.minutes_overdue }} min late)
+                            </span>
+                        {% endif %}
+                    </p>
+                    <form method="post" action="{% url 'staff_laptop_return' laptop.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-success w-100">Mark returned</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h6 class="mb-3">History</h6>
+        {% if history %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="text-muted small">
+                    <tr>
+                        <th>Student</th>
+                        <th>Out</th>
+                        <th>Due</th>
+                        <th>Returned</th>
+                        <th>Duration</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for c in history %}
+                        <tr>
+                            <td>{{ c.student.admission_number }}</td>
+                            <td>{{ c.checked_out_at|date:"M d, H:i" }}</td>
+                            <td>{{ c.expected_return_at|date:"M d, H:i" }}</td>
+                            <td>
+                                {% if c.returned_at %}
+                                    {{ c.returned_at|date:"M d, H:i" }}
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Open</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ c.hours_out }} h</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted small mb-0">No checkout history yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

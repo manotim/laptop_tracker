@@ -1,0 +1,41 @@
+{% extends 'tracking/base.html' %}
+{% block title %}{% if laptop %}Edit{% else %}Add{% endif %} laptop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h4 class="mb-3">
+                    {% if laptop %}Edit {{ laptop.name }}{% else %}Add a laptop{% endif %}
+                </h4>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary">
+                        {% if laptop %}Save changes{% else %}Add laptop{% endif %}
+                    </button>
+                    <a href="{% url 'staff_laptops' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

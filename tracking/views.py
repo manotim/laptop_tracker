@@ -1,14 +1,17 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from .forms import CheckoutForm, StudentLoginForm
-from .models import Checkout, Laptop
+from .forms import CheckoutForm, LaptopForm, StudentCreateForm, StudentLoginForm
+from .models import Checkout, Laptop, Student
 
 
 # ------------------------------------------------------------------ auth
@@ -161,3 +164,179 @@ def staff_dashboard(request):
         'active': active,
         'laptop_rows': laptop_rows,
     })
+
+
+# ---------------------------------------------------------------- staff: decorator
+
+staff_required = user_passes_test(
+    lambda u: u.is_authenticated and u.is_staff,
+    login_url='login',
+)
+
+
+# ---------------------------------------------------------------- staff: laptops
+
+@staff_required
+def staff_laptops_list(request):
+    q = request.GET.get('q', '').strip()
+    qs = Laptop.objects.select_related('owner').order_by('slot_label', 'name')
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(model_number__icontains=q)
+            | Q(slot_label__icontains=q)
+            | Q(owner__admission_number__icontains=q)
+            | Q(owner__full_name__icontains=q)
+        )
+
+    rows = []
+    for laptop in qs:
+        active = laptop.active_checkout
+        rows.append({
+            'laptop': laptop,
+            'active': active,
+            'is_available': active is None,
+            'is_overdue': active.is_overdue if active else False,
+        })
+
+    return render(request, 'tracking/staff_laptops.html', {
+        'rows': rows,
+        'query': q,
+        'duration_choices': settings.SESSION_DURATION_CHOICES[:6],
+    })
+
+
+@staff_required
+def staff_laptop_form(request, laptop_id=None):
+    laptop = get_object_or_404(Laptop, id=laptop_id) if laptop_id else None
+    if request.method == 'POST':
+        form = LaptopForm(request.POST, instance=laptop)
+        if form.is_valid():
+            obj = form.save()
+            messages.success(request, f"Laptop {obj.name} saved.")
+            return redirect('staff_laptop_detail', laptop_id=obj.id)
+    else:
+        form = LaptopForm(instance=laptop)
+
+    return render(request, 'tracking/staff_laptop_form.html', {
+        'form': form,
+        'laptop': laptop,
+    })
+
+
+@staff_required
+def staff_laptop_detail(request, laptop_id):
+    laptop = get_object_or_404(Laptop.objects.select_related('owner'), id=laptop_id)
+    active = laptop.active_checkout
+    history = laptop.checkouts.select_related('student').order_by('-checked_out_at')[:20]
+
+    if request.method == 'POST' and not active:
+        hours = int(request.POST.get('duration_hours', 3))
+        now = timezone.now()
+        Checkout.objects.create(
+            laptop=laptop,
+            student=laptop.owner,
+            checked_out_at=now,
+            expected_return_at=now + timedelta(hours=hours),
+        )
+        messages.success(request, f"{laptop.name} checked out for {hours}h.")
+        return redirect('staff_laptop_detail', laptop_id=laptop.id)
+
+    return render(request, 'tracking/staff_laptop_detail.html', {
+        'laptop': laptop,
+        'active': active,
+        'history': history,
+        'duration_choices': settings.SESSION_DURATION_CHOICES,
+    })
+
+
+@staff_required
+@require_POST
+def staff_laptop_checkout(request, laptop_id):
+    laptop = get_object_or_404(Laptop, id=laptop_id)
+    back = request.META.get('HTTP_REFERER') or '/staff/laptops/'
+    if not laptop.is_available:
+        messages.error(request, f"{laptop.name} is already checked out.")
+        return redirect(back)
+    hours = int(request.POST.get('duration_hours', 3))
+    now = timezone.now()
+    Checkout.objects.create(
+        laptop=laptop,
+        student=laptop.owner,
+        checked_out_at=now,
+        expected_return_at=now + timedelta(hours=hours),
+    )
+    messages.success(
+        request,
+        f"{laptop.name} checked out to {laptop.owner.admission_number} for {hours}h."
+    )
+    return redirect(back)
+
+
+@staff_required
+@require_POST
+def staff_laptop_return(request, laptop_id):
+    laptop = get_object_or_404(Laptop, id=laptop_id)
+    back = request.META.get('HTTP_REFERER') or '/staff/laptops/'
+    active = laptop.active_checkout
+    if not active:
+        messages.error(request, f"{laptop.name} is not checked out.")
+        return redirect(back)
+    active.returned_at = timezone.now()
+    active.save(update_fields=['returned_at'])
+    messages.success(request, f"{laptop.name} returned.")
+    return redirect(back)
+
+
+# ---------------------------------------------------------------- staff: students
+
+@staff_required
+def staff_students_list(request):
+    q = request.GET.get('q', '').strip()
+    qs = Student.objects.all().order_by('admission_number')
+    if q:
+        qs = qs.filter(
+            Q(admission_number__icontains=q)
+            | Q(full_name__icontains=q)
+            | Q(email__icontains=q)
+        )
+
+    rows = []
+    for s in qs:
+        rows.append({
+            'student': s,
+            'laptop_count': s.laptops.count(),
+            'out_count': s.checkouts.filter(returned_at__isnull=True).count(),
+        })
+
+    return render(request, 'tracking/staff_students.html', {
+        'rows': rows,
+        'query': q,
+    })
+
+
+@staff_required
+def staff_student_form(request, student_id=None):
+    student = get_object_or_404(Student, id=student_id) if student_id else None
+
+    if student:
+        # Simple edit — no password change here. Use admin for password resets.
+        if request.method == 'POST':
+            student.admission_number = request.POST.get('admission_number', student.admission_number)
+            student.full_name = request.POST.get('full_name', student.full_name)
+            student.email = request.POST.get('email', student.email)
+            student.save()
+            messages.success(request, f"Student {student.admission_number} updated.")
+            return redirect('staff_students')
+        return render(request, 'tracking/staff_student_form.html', {'student': student})
+
+    if request.method == 'POST':
+        form = StudentCreateForm(request.POST)
+        if form.is_valid():
+            s = form.save()
+            messages.success(request, f"Student {s.admission_number} created.")
+            return redirect('staff_students')
+    else:
+        form = StudentCreateForm()
+
+    return render(request, 'tracking/staff_student_form.html', {'form': form, 'student': None})

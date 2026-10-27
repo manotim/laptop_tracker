@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
+from .models import Laptop, Student
 
 
 class StudentLoginForm(AuthenticationForm):
@@ -35,3 +36,59 @@ class CheckoutForm(forms.Form):
             'placeholder': 'Optional — e.g. class, project',
         }),
     )
+
+
+class LaptopForm(forms.ModelForm):
+    class Meta:
+        model = Laptop
+        fields = ['owner', 'name', 'model_number', 'serial_number', 'slot_label']
+        widgets = {
+            'owner': forms.Select(attrs={'class': 'form-select'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'model_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'slot_label': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "Leave blank to use owner's admission number",
+            }),
+        }
+
+
+class StudentCreateForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        min_length=6,
+        help_text="At least 6 characters",
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Confirm password",
+    )
+
+    class Meta:
+        model = Student
+        fields = ['admission_number', 'full_name', 'email']
+        widgets = {
+            'admission_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        p1, p2 = cleaned.get('password'), cleaned.get('password_confirm')
+        if p1 and p2 and p1 != p2:
+            self.add_error('password_confirm', "Passwords do not match.")
+        adm = cleaned.get('admission_number')
+        if adm and Student.objects.filter(username=adm).exists():
+            self.add_error('admission_number',
+                           "This admission number conflicts with an existing username.")
+        return cleaned
+
+    def save(self, commit=True):
+        student = super().save(commit=False)
+        student.username = self.cleaned_data['admission_number']
+        student.set_password(self.cleaned_data['password'])
+        if commit:
+            student.save()
+        return student

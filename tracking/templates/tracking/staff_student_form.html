@@ -1,0 +1,64 @@
+{% extends 'tracking/base.html' %}
+{% block title %}{% if student %}Edit{% else %}Add{% endif %} student{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-body p-4">
+                <h4 class="mb-3">
+                    {% if student %}Edit {{ student.admission_number }}{% else %}Add a student{% endif %}
+                </h4>
+
+                {% if student %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Admission number</label>
+                            <input type="text" name="admission_number" class="form-control"
+                                   value="{{ student.admission_number }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full name</label>
+                            <input type="text" name="full_name" class="form-control"
+                                   value="{{ student.full_name }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                   value="{{ student.email }}">
+                        </div>
+                        <p class="small text-muted">
+                            To reset this student's password, use
+                            <a href="/admin/tracking/student/{{ student.id }}/change/">Django admin</a>.
+                        </p>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <a href="{% url 'staff_students' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </form>
+                {% else %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary">Create student</button>
+                        <a href="{% url 'staff_students' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
