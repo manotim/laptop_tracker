@@ -7,11 +7,11 @@
     <a href="{% url 'staff_student_add' %}" class="btn btn-primary">+ Add student</a>
 </div>
 
-<form method="get" class="mb-3">
+<form method="get" class="mb-3" id="search-form">
     <div class="input-group">
-        <input type="text" name="q" value="{{ query }}" class="form-control"
-               placeholder="Search by admission number, name, or email…">
-        <button class="btn btn-outline-secondary">Search</button>
+        <input type="text" name="q" id="search-input" value="{{ query }}" class="form-control"
+               placeholder="Search by admission number, name, or email…" autocomplete="off">
+        <button class="btn btn-outline-secondary" type="submit">🔍</button>
         {% if query %}
             <a href="{% url 'staff_students' %}" class="btn btn-outline-secondary">Clear</a>
         {% endif %}
@@ -109,4 +109,25 @@
     </ul>
 </nav>
 {% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const searchForm = document.getElementById('search-form');
+        let debounceTimer;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                searchForm.submit();
+            }, 400); // Wait 400ms after user stops typing
+        });
+
+        // Keep focus on the search bar after the page reloads
+        if (searchInput.value.length > 0) {
+            searchInput.focus();
+            searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+        }
+    });
+</script>
 {% endblock %}
