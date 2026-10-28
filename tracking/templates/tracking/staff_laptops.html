@@ -51,7 +51,7 @@
                                 <span class="badge bg-success">In storage</span>
                             {% elif row.is_overdue %}
                                 <span class="badge bg-danger">
-                                    Overdue {{ row.active.minutes_overdue }}m
+                                    Overdue {{ row.active.overdue_duration_display }}
                                 </span>
                             {% else %}
                                 <span class="badge bg-warning text-dark">Out</span>

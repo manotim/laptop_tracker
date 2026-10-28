@@ -45,7 +45,7 @@
                         <th>Owner</th>
                         <th>Admission #</th>
                         <th>Was due</th>
-                        <th>Minutes late</th>
+                        <th>Time late</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -55,7 +55,7 @@
                             <td>{{ c.student.full_name|default:"—" }}</td>
                             <td>{{ c.student.admission_number }}</td>
                             <td>{{ c.expected_return_at|date:"M d, H:i" }}</td>
-                            <td class="text-danger"><strong>{{ c.minutes_overdue }}</strong></td>
+                            <td class="text-danger"><strong>{{ c.overdue_duration_display }}</strong></td>
                         </tr>
                     {% endfor %}
                     </tbody>

@@ -97,6 +97,34 @@ class Checkout(models.Model):
         return int(delta.total_seconds() // 60)
 
     @property
+    def overdue_duration_display(self):
+        """Returns a human-readable string of overdue time (e.g., 1d 3h 15m 20s)."""
+        if not self.is_overdue:
+            return ""
+        
+        delta = timezone.now() - self.expected_return_at
+        total_seconds = int(delta.total_seconds())
+        
+        days = total_seconds // (24 * 3600)
+        total_seconds %= (24 * 3600)
+        hours = total_seconds // 3600
+        total_seconds %= 3600
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+
+        parts = []
+        if days > 0:
+            parts.append(f"{days}d")
+        if hours > 0:
+            parts.append(f"{hours}h")
+        if minutes > 0:
+            parts.append(f"{minutes}m")
+        if seconds > 0 or not parts:
+            parts.append(f"{seconds}s")
+
+        return " ".join(parts)
+
+    @property
     def hours_out(self):
         end = self.returned_at or timezone.now()
         return round((end - self.checked_out_at).total_seconds() / 3600, 1)

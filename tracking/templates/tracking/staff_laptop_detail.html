@@ -76,7 +76,7 @@
                         Due <strong>{{ active.expected_return_at|date:"M d, H:i" }}</strong>
                         {% if active.is_overdue %}
                             <span class="text-danger">
-                                ({{ active.minutes_overdue }} min late)
+                                ({{ active.overdue_duration_display }} late)
                             </span>
                         {% endif %}
                     </p>

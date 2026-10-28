@@ -52,7 +52,7 @@
                             <p class="small text-danger mb-2">
                                 Was due
                                 {{ card.active.expected_return_at|date:"M d, H:i" }} —
-                                <strong>{{ card.active.minutes_overdue }} min late</strong>
+                                <strong>{{ card.active.overdue_duration_display }} late</strong>
                             </p>
                             <div class="mt-auto">
                                 <a href="{% url 'return_laptop' card.active.id %}"
