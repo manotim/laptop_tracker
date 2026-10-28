@@ -67,10 +67,14 @@ class StudentCreateForm(forms.ModelForm):
 
     class Meta:
         model = Student
-        fields = ['admission_number', 'full_name', 'email']
+        fields = ['admission_number', 'full_name', 'class_stream', 'email']
         widgets = {
             'admission_number': forms.TextInput(attrs={'class': 'form-control'}),
             'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'class_stream': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. Form 4 West',
+            }),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 

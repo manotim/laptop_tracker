@@ -335,8 +335,11 @@ def staff_student_form(request, student_id=None):
     if student:
         # Simple edit — no password change here. Use admin for password resets.
         if request.method == 'POST':
-            student.admission_number = request.POST.get('admission_number', student.admission_number)
+            new_admission = request.POST.get('admission_number', student.admission_number)
+            student.admission_number = new_admission
+            student.username = new_admission  # keep username in sync (see note below)
             student.full_name = request.POST.get('full_name', student.full_name)
+            student.class_stream = request.POST.get('class_stream', student.class_stream)  # NEW
             student.email = request.POST.get('email', student.email)
             student.save()
             messages.success(request, f"Student {student.admission_number} updated.")

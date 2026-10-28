@@ -10,7 +10,7 @@
 <form method="get" class="mb-3" id="search-form">
     <div class="input-group">
         <input type="text" name="q" id="search-input" value="{{ query }}" class="form-control"
-               placeholder="Search by admission number, name, or email…" autocomplete="off">
+               placeholder="Search by admission number, name, class, or email…" autocomplete="off">
         <button class="btn btn-outline-secondary" type="submit">🔍</button>
         {% if query %}
             <a href="{% url 'staff_students' %}" class="btn btn-outline-secondary">Clear</a>
@@ -26,6 +26,7 @@
                 <tr>
                     <th>Admission #</th>
                     <th>Name</th>
+                    <th>Class / Stream</th>
                     <th>Email</th>
                     <th>Laptops</th>
                     <th>Currently out</th>
@@ -37,6 +38,13 @@
                     <tr>
                         <td><strong>{{ row.student.admission_number }}</strong></td>
                         <td>{{ row.student.full_name|default:"—" }}</td>
+                        <td>
+                            {% if row.student.class_stream %}
+                                <span class="badge bg-light text-dark border">{{ row.student.class_stream }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
                         <td><small class="text-muted">{{ row.student.email|default:"—" }}</small></td>
                         <td>{{ row.laptop_count }}</td>
                         <td>
@@ -65,7 +73,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="7" class="text-center text-muted py-4">
                             No students yet.
                             <a href="{% url 'staff_student_add' %}">Add the first one</a>.
                         </td>

@@ -5,18 +5,19 @@ from .models import Checkout, Laptop, Student
 
 @admin.register(Student)
 class StudentAdmin(UserAdmin):
-    list_display = ('admission_number', 'full_name', 'email',
+    list_display = ('admission_number', 'full_name', 'class_stream', 'email',
                     'is_staff', 'is_active')
-    list_filter = ('is_staff', 'is_active')
-    search_fields = ('admission_number', 'full_name', 'email', 'username')
+    list_filter = ('is_staff', 'is_active', 'class_stream')
+    search_fields = ('admission_number', 'full_name', 'class_stream',
+                     'email', 'username')
     ordering = ('admission_number',)
 
     # Extend Django's built-in user fieldsets with our custom fields
     fieldsets = UserAdmin.fieldsets + (
-        ('Office info', {'fields': ('admission_number', 'full_name')}),
+        ('Office info', {'fields': ('admission_number', 'full_name', 'class_stream')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Office info', {'fields': ('admission_number', 'full_name', 'email')}),
+        ('Office info', {'fields': ('admission_number', 'full_name', 'class_stream', 'email')}),
     )
 
 

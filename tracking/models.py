@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
-
 class Student(AbstractUser):
     """
     Custom user model. `username` and `admission_number` will hold the
@@ -14,13 +13,20 @@ class Student(AbstractUser):
         help_text="Unique admission number, e.g. ADM-2024-001",
     )
     full_name = models.CharField(max_length=120, blank=True)
+    
+    # NEW: Class/Stream field
+    class_stream = models.CharField(
+        max_length=50, 
+        blank=True, 
+        help_text="e.g. Form 3 East"
+    )
 
     REQUIRED_FIELDS = ['admission_number', 'email']
 
     def __str__(self):
         return self.full_name or self.admission_number
 
-
+    
 class Laptop(models.Model):
     """A student's personal laptop, stored under office care."""
     owner = models.ForeignKey(
