@@ -128,7 +128,6 @@ def return_laptop(request, checkout_id):
 
 
 # ------------------------------------------------------------------ staff
-
 @login_required
 def staff_dashboard(request):
     """Staff-only overview: everything, plus overdue alerts."""
@@ -153,8 +152,15 @@ def staff_dashboard(request):
     )
 
     laptop_rows = []
+    at_home_count = 0
+    
     for laptop in Laptop.objects.select_related('owner'):
         a = laptop.active_checkout
+        is_home = not laptop.owner.is_reported
+        
+        if is_home and a is None:
+            at_home_count += 1
+            
         laptop_rows.append({
             'laptop': laptop,
             'is_available': a is None,
@@ -165,6 +171,7 @@ def staff_dashboard(request):
         'overdue': overdue,
         'active': active,
         'laptop_rows': laptop_rows,
+        'at_home_count': at_home_count, # NEW
     })
 
 
