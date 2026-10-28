@@ -13,6 +13,8 @@ from django.views.decorators.http import require_POST
 from .forms import CheckoutForm, LaptopForm, StudentCreateForm, StudentLoginForm
 from .models import Checkout, Laptop, Student
 
+from django.core.paginator import Paginator
+
 
 # ------------------------------------------------------------------ auth
 
@@ -175,7 +177,6 @@ staff_required = user_passes_test(
 
 
 # ---------------------------------------------------------------- staff: laptops
-
 @staff_required
 def staff_laptops_list(request):
     q = request.GET.get('q', '').strip()
@@ -189,8 +190,13 @@ def staff_laptops_list(request):
             | Q(owner__full_name__icontains=q)
         )
 
+    # NEW: Pagination logic
+    paginator = Paginator(qs, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     rows = []
-    for laptop in qs:
+    for laptop in page_obj.object_list:
         active = laptop.active_checkout
         rows.append({
             'laptop': laptop,
@@ -203,6 +209,7 @@ def staff_laptops_list(request):
         'rows': rows,
         'query': q,
         'duration_choices': settings.SESSION_DURATION_CHOICES[:6],
+        'page_obj': page_obj, # Pass the page object to the template
     })
 
 
@@ -289,7 +296,6 @@ def staff_laptop_return(request, laptop_id):
 
 
 # ---------------------------------------------------------------- staff: students
-
 @staff_required
 def staff_students_list(request):
     q = request.GET.get('q', '').strip()
@@ -301,8 +307,13 @@ def staff_students_list(request):
             | Q(email__icontains=q)
         )
 
+    # NEW: Pagination logic
+    paginator = Paginator(qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     rows = []
-    for s in qs:
+    for s in page_obj.object_list:
         rows.append({
             'student': s,
             'laptop_count': s.laptops.count(),
@@ -312,7 +323,9 @@ def staff_students_list(request):
     return render(request, 'tracking/staff_students.html', {
         'rows': rows,
         'query': q,
+        'page_obj': page_obj, # Pass the page object to the template
     })
+
 
 
 @staff_required
