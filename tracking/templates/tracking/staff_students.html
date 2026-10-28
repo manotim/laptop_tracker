@@ -50,7 +50,9 @@
                             <a href="{% url 'staff_student_edit' row.student.id %}" class="btn btn-sm btn-outline-secondary">
                                 Edit
                             </a>
-                            <!-- NEW: Delete Button -->
+                            
+                            <!-- NEW: Hide delete button for superusers -->
+                            {% if not row.student.is_superuser %}
                             <form method="post" action="{% url 'staff_student_delete' row.student.id %}" class="d-inline ms-1">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger" 
@@ -58,6 +60,7 @@
                                     Delete
                                 </button>
                             </form>
+                            {% endif %}
                         </td>
                     </tr>
                 {% empty %}

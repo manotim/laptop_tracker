@@ -365,6 +365,11 @@ def staff_laptop_delete(request, laptop_id):
 def staff_student_delete(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     
+    # NEW: Safety check: Don't delete superusers
+    if student.is_superuser:
+        messages.error(request, "Superuser accounts (admins) cannot be deleted.")
+        return redirect('staff_students')
+
     # Safety check: Don't delete if they still own laptops
     if student.laptops.exists():
         messages.error(
