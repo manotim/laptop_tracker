@@ -47,8 +47,17 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            <a href="{% url 'staff_student_edit' row.student.id %}"
-                               class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a href="{% url 'staff_student_edit' row.student.id %}" class="btn btn-sm btn-outline-secondary">
+                                Edit
+                            </a>
+                            <!-- NEW: Delete Button -->
+                            <form method="post" action="{% url 'staff_student_delete' row.student.id %}" class="d-inline ms-1">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('Are you sure you want to delete student {{ row.student.admission_number }}?')">
+                                    Delete
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 {% empty %}

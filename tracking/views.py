@@ -340,3 +340,41 @@ def staff_student_form(request, student_id=None):
         form = StudentCreateForm()
 
     return render(request, 'tracking/staff_student_form.html', {'form': form, 'student': None})
+
+
+# ---------------------------------------------------------------- staff: delete actions
+
+@staff_required
+@require_POST
+def staff_laptop_delete(request, laptop_id):
+    laptop = get_object_or_404(Laptop, id=laptop_id)
+    
+    # Safety check: Don't delete if it's currently checked out
+    if laptop.active_checkout:
+        messages.error(request, f"Cannot delete {laptop.name} because it is currently checked out.")
+        return redirect('staff_laptops')
+        
+    name = laptop.name
+    laptop.delete()
+    messages.success(request, f"Laptop '{name}' was deleted successfully.")
+    return redirect('staff_laptops')
+
+
+@staff_required
+@require_POST
+def staff_student_delete(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    
+    # Safety check: Don't delete if they still own laptops
+    if student.laptops.exists():
+        messages.error(
+            request, 
+            f"Cannot delete {student.admission_number} because they still have laptops assigned. "
+            "Delete their laptops first."
+        )
+        return redirect('staff_students')
+        
+    adm = student.admission_number
+    student.delete()
+    messages.success(request, f"Student {adm} was deleted successfully.")
+    return redirect('staff_students')
