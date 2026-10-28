@@ -1,0 +1,105 @@
+{% extends 'tracking/base.html' %}
+{% block title %}System Logs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Checkout & Return Logs</h4>
+    <span class="text-muted small">Showing all historical records</span>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Laptop</th>
+                    <th>Time Out</th>
+                    <th>Time Returned</th>
+                    <th>Status / Duration</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for log in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ log.checked_out_at|date:"M d, Y" }}</strong><br>
+                            <small class="text-muted">{{ log.checked_out_at|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            {{ log.student.full_name|default:log.student.admission_number }}<br>
+                            <small class="text-muted">{{ log.student.admission_number }}</small>
+                        </td>
+                        <td>
+                            {{ log.laptop.name }}<br>
+                            <small class="text-muted">{{ log.laptop.model_number }}</small>
+                        </td>
+                        <td>{{ log.checked_out_at|date:"H:i" }}</td>
+                        <td>
+                            {% if log.returned_at %}
+                                {{ log.returned_at|date:"M d, H:i" }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.returned_at %}
+                                <span class="badge bg-success mb-1">Returned</span><br>
+                                <small class="text-muted">Took {{ log.hours_out }} hrs</small>
+                            {% elif log.is_overdue %}
+                                <span class="badge bg-danger mb-1">Overdue</span><br>
+                                <small class="text-danger">{{ log.overdue_duration_display }} late</small>
+                            {% else %}
+                                <span class="badge bg-warning text-dark mb-1">Active</span><br>
+                                <small class="text-muted">Due {{ log.expected_return_at|date:"H:i" }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No checkout logs exist yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Controls -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

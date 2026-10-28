@@ -413,3 +413,18 @@ def staff_student_toggle_reported(request, student_id):
     
     # Redirect back to wherever the button was clicked from
     return redirect(request.META.get('HTTP_REFERER', 'staff_students'))
+
+
+@staff_required
+def staff_logs(request):
+    # Fetch all checkouts, newest first
+    logs = Checkout.objects.select_related('laptop', 'student').order_by('-checked_out_at')
+    
+    # Paginate the logs (20 per page)
+    paginator = Paginator(logs, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'tracking/staff_logs.html', {
+        'page_obj': page_obj,
+    })

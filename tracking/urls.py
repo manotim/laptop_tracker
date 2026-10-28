@@ -18,6 +18,8 @@ urlpatterns = [
     path('staff/laptops/<int:laptop_id>/checkout/', views.staff_laptop_checkout, name='staff_laptop_checkout'),
     path('staff/laptops/<int:laptop_id>/return/', views.staff_laptop_return, name='staff_laptop_return'),
 
+    path('staff/logs/', views.staff_logs, name='staff_logs'),
+
     path('staff/students/', views.staff_students_list, name='staff_students'),
     path('staff/students/add/', views.staff_student_form, name='staff_student_add'),
     path('staff/students/<int:student_id>/edit/', views.staff_student_form, name='staff_student_edit'),
