@@ -27,7 +27,7 @@
                     <th>Admission #</th>
                     <th>Name</th>
                     <th>Class / Stream</th>
-                    <th>Email</th>
+                    <th>Presence</th>
                     <th>Laptops</th>
                     <th>Currently out</th>
                     <th class="text-end">Actions</th>
@@ -38,14 +38,17 @@
                     <tr>
                         <td><strong>{{ row.student.admission_number }}</strong></td>
                         <td>{{ row.student.full_name|default:"—" }}</td>
+                        <td>{{ row.student.class_stream|default:"—" }}</td>
+
+                        <!-- NEW: Presence Status -->
                         <td>
-                            {% if row.student.class_stream %}
-                                <span class="badge bg-light text-dark border">{{ row.student.class_stream }}</span>
+                            {% if row.student.is_reported %}
+                                <span class="badge bg-success">On Campus</span>
                             {% else %}
-                                <span class="text-muted">—</span>
+                                <span class="badge bg-secondary">At Home</span>
                             {% endif %}
                         </td>
-                        <td><small class="text-muted">{{ row.student.email|default:"—" }}</small></td>
+
                         <td>{{ row.laptop_count }}</td>
                         <td>
                             {% if row.out_count %}
@@ -55,15 +58,22 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            <a href="{% url 'staff_student_edit' row.student.id %}" class="btn btn-sm btn-outline-secondary">
-                                Edit
-                            </a>
-                            
-                            <!-- NEW: Hide delete button for superusers -->
+                            <!-- NEW: Toggle Button -->
+                            <form method="post" action="{% url 'staff_student_toggle_reported' row.student.id %}" class="d-inline">
+                                {% csrf_token %}
+                                {% if row.student.is_reported %}
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Mark Away</button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-success" type="submit">Mark Reported</button>
+                                {% endif %}
+                            </form>
+
+                            <a href="{% url 'staff_student_edit' row.student.id %}" class="btn btn-sm btn-outline-secondary ms-1">Edit</a>
+
                             {% if not row.student.is_superuser %}
                             <form method="post" action="{% url 'staff_student_delete' row.student.id %}" class="d-inline ms-1">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
                                         onclick="return confirm('Are you sure you want to delete student {{ row.student.admission_number }}?')">
                                     Delete
                                 </button>

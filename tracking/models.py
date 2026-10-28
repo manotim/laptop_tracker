@@ -13,12 +13,18 @@ class Student(AbstractUser):
         help_text="Unique admission number, e.g. ADM-2024-001",
     )
     full_name = models.CharField(max_length=120, blank=True)
-    
-    # NEW: Class/Stream field
+
+    # Class/Stream field
     class_stream = models.CharField(
-        max_length=50, 
-        blank=True, 
-        help_text="e.g. Form 3 East"
+        max_length=50,
+        blank=True,
+        help_text="e.g. Form 3 East",
+    )
+
+    # Track physical presence
+    is_reported = models.BooleanField(
+        default=False,
+        help_text="Has the student physically reported back to school?",
     )
 
     REQUIRED_FIELDS = ['admission_number', 'email']
@@ -26,7 +32,7 @@ class Student(AbstractUser):
     def __str__(self):
         return self.full_name or self.admission_number
 
-    
+
 class Laptop(models.Model):
     """A student's personal laptop, stored under office care."""
     owner = models.ForeignKey(

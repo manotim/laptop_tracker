@@ -399,3 +399,17 @@ def staff_student_delete(request, student_id):
     student.delete()
     messages.success(request, f"Student {adm} was deleted successfully.")
     return redirect('staff_students')
+
+
+@staff_required
+@require_POST
+def staff_student_toggle_reported(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    student.is_reported = not student.is_reported
+    student.save(update_fields=['is_reported'])
+    
+    status = "reported back" if student.is_reported else "marked as away"
+    messages.success(request, f"Student {student.admission_number} {status}.")
+    
+    # Redirect back to wherever the button was clicked from
+    return redirect(request.META.get('HTTP_REFERER', 'staff_students'))

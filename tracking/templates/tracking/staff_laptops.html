@@ -47,18 +47,22 @@
                             <small class="text-muted">{{ row.laptop.owner.admission_number }}</small>
                         </td>
                         <td>
-                            {% if row.is_available %}
+                            {% if not row.laptop.owner.is_reported %}
+                                <!-- NEW: If owner is at home, laptop is not really here -->
+                                <span class="badge bg-secondary">At Home</span>
+                            {% elif row.is_available %}
                                 <span class="badge bg-success">In storage</span>
                             {% elif row.is_overdue %}
-                                <span class="badge bg-danger">
-                                    Overdue {{ row.active.overdue_duration_display }}
-                                </span>
+                                <span class="badge bg-danger">Overdue {{ row.active.overdue_duration_display }}</span>
                             {% else %}
                                 <span class="badge bg-warning text-dark">Out</span>
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            {% if row.is_available %}
+                            {% if not row.laptop.owner.is_reported %}
+                                <!-- Disable checkout -->
+                                <button class="btn btn-sm btn-secondary" disabled>Owner Away</button>
+                            {% elif row.is_available %}
                                 <form method="post" action="{% url 'staff_laptop_checkout' row.laptop.id %}" class="d-inline-flex gap-1 align-items-center">
                                     {% csrf_token %}
                                     <select name="duration_hours" class="form-select form-select-sm" style="width:auto">
@@ -74,8 +78,8 @@
                                     <button class="btn btn-sm btn-success">Return</button>
                                 </form>
                             {% endif %}
-                            
-                            <!-- NEW: Delete Button -->
+
+                            <!-- Delete Button -->
                             <form method="post" action="{% url 'staff_laptop_delete' row.laptop.id %}" class="d-inline ms-1">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger" 
