@@ -20,6 +20,8 @@ urlpatterns = [
 
     path('staff/logs/', views.staff_logs, name='staff_logs'),
 
+    path('staff/logs/export/', views.export_logs_csv, name='export_logs_csv'),
+
     path('staff/students/', views.staff_students_list, name='staff_students'),
     path('staff/students/add/', views.staff_student_form, name='staff_student_add'),
     path('staff/students/<int:student_id>/edit/', views.staff_student_form, name='staff_student_edit'),

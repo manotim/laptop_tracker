@@ -1,5 +1,8 @@
 from datetime import timedelta
 
+import csv  # Add to the top of your file
+from django.http import HttpResponse
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -435,3 +438,26 @@ def staff_logs(request):
     return render(request, 'tracking/staff_logs.html', {
         'page_obj': page_obj,
     })
+
+@staff_required
+def export_logs_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="laptop_logs.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Student', 'Admission #', 'Laptop', 'Model', 'Time Out', 'Time Returned', 'Status'])
+
+    logs = Checkout.objects.select_related('laptop', 'student').order_by('-checked_out_at')
+    for log in logs:
+        status = "Returned" if log.returned_at else ("Overdue" if log.is_overdue else "Active")
+        writer.writerow([
+            log.checked_out_at.strftime('%Y-%m-%d'),
+            log.student.full_name or log.student.admission_number,
+            log.student.admission_number,
+            log.laptop.name,
+            log.laptop.model_number,
+            log.checked_out_at.strftime('%H:%M'),
+            log.returned_at.strftime('%Y-%m-%d %H:%M') if log.returned_at else "",
+            status
+        ])
+    return response
