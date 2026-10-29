@@ -43,7 +43,11 @@
                         </td>
                         <td><small class="text-muted">{{ row.laptop.model_number }}</small></td>
                         <td>
-                            {{ row.laptop.owner.full_name|default:"—" }}<br>
+                            {{ row.laptop.owner.full_name|default:"—" }}
+                            {% if row.laptop.owner.class_stream %}
+                                <span class="text-muted">({{ row.laptop.owner.class_stream }})</span>
+                            {% endif %}
+                            <br>
                             <small class="text-muted">{{ row.laptop.owner.admission_number }}</small>
                         </td>
                         <td>

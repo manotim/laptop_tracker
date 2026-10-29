@@ -32,7 +32,11 @@
                             <small class="text-muted">{{ log.checked_out_at|date:"H:i" }}</small>
                         </td>
                         <td>
-                            {{ log.student.full_name|default:log.student.admission_number }}<br>
+                            {{ log.student.full_name|default:log.student.admission_number }}
+                            {% if log.student.class_stream %}
+                                <span class="text-muted">({{ log.student.class_stream }})</span>
+                            {% endif %}
+                            <br>
                             <small class="text-muted">{{ log.student.admission_number }}</small>
                         </td>
                         <td>
