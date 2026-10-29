@@ -1,0 +1,50 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Streams Overview{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">Class / Stream Overview</h4>
+
+<div class="row g-3">
+    {% for stream in stream_data %}
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ stream.name }}</h5>
+                <span class="badge bg-light text-dark">{{ stream.total_students }} Students</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Laptops:</span>
+                    <strong>{{ stream.total_laptops }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-success">In Storage:</span>
+                    <strong>{{ stream.in_laptops }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-warning">Currently Out:</span>
+                    <strong>{{ stream.out_laptops }}</strong>
+                </div>
+                <a href="{% url 'staff_students' %}?stream={{ stream.name|urlencode }}" class="btn btn-outline-primary w-100">
+                    View Students
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">No students have been assigned to a stream yet.</div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if unassigned > 0 %}
+<div class="alert alert-warning mt-4 d-flex justify-content-between align-items-center">
+    <div>
+        <strong>Note:</strong> There are {{ unassigned }} student(s) without a class/stream assigned.
+    </div>
+    <a href="{% url 'staff_students' %}" class="btn btn-sm btn-outline-dark">View Unassigned</a>
+</div>
+{% endif %}
+
+{% endblock %}

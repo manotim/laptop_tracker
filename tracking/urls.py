@@ -20,6 +20,8 @@ urlpatterns = [
 
     path('staff/logs/', views.staff_logs, name='staff_logs'),
 
+    path('staff/streams/', views.staff_streams_list, name='staff_streams'),
+
     path('staff/logs/export/', views.export_logs_csv, name='export_logs_csv'),
 
     path('staff/students/', views.staff_students_list, name='staff_students'),

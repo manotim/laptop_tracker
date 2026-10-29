@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -309,15 +309,23 @@ def staff_laptop_return(request, laptop_id):
 @staff_required
 def staff_students_list(request):
     q = request.GET.get('q', '').strip()
+    stream = request.GET.get('stream', '').strip() # NEW: Filter by stream
+    
     qs = Student.objects.all().order_by('admission_number')
+    
     if q:
         qs = qs.filter(
             Q(admission_number__icontains=q)
             | Q(full_name__icontains=q)
             | Q(email__icontains=q)
         )
+    if stream:
+        qs = qs.filter(class_stream=stream) # Apply stream filter
+        
+    # Get unique streams for the dropdown
+    available_streams = Student.objects.exclude(class_stream='').values_list('class_stream', flat=True).distinct().order_by('class_stream')
 
-    # NEW: Pagination logic
+    # Pagination logic
     paginator = Paginator(qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -333,7 +341,9 @@ def staff_students_list(request):
     return render(request, 'tracking/staff_students.html', {
         'rows': rows,
         'query': q,
-        'page_obj': page_obj, # Pass the page object to the template
+        'current_stream': stream, # Pass selected stream back to template
+        'available_streams': available_streams,
+        'page_obj': page_obj, 
     })
 
 
@@ -461,3 +471,37 @@ def export_logs_csv(request):
             status
         ])
     return response
+
+
+@staff_required
+def staff_streams_list(request):
+    # Get unique streams and ignore blank ones
+    streams = Student.objects.exclude(class_stream='').values_list('class_stream', flat=True).distinct().order_by('class_stream')
+    
+    stream_data = []
+    for stream in streams:
+        # Get students in this stream
+        students = Student.objects.filter(class_stream=stream)
+        total_students = students.count()
+        
+        # Count laptops owned by students in this stream
+        total_laptops = Laptop.objects.filter(owner__class_stream=stream).count()
+        
+        # Count how many laptops from this stream are currently checked out
+        out_laptops = Checkout.objects.filter(student__class_stream=stream, returned_at__isnull=True).count()
+        
+        stream_data.append({
+            'name': stream,
+            'total_students': total_students,
+            'total_laptops': total_laptops,
+            'out_laptops': out_laptops,
+            'in_laptops': total_laptops - out_laptops
+        })
+
+    # Also count unassigned students
+    unassigned = Student.objects.filter(class_stream='').count()
+
+    return render(request, 'tracking/staff_streams.html', {
+        'stream_data': stream_data,
+        'unassigned': unassigned
+    })
